@@ -9,10 +9,12 @@ let connection = async() => {
         //         useNewUrlParser:true
         // }
         )
-        console.log('connected to dadtabase')
+        console.log('connected to database on PORT ' + process.env.PORT)
     } catch (error){
-        console.log(error.message)
+        console.log(error)
     }
 }
 
 connection()
+
+

@@ -5,9 +5,9 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-
+const { CLIENT,SECRET,PAYPAL_URL  } = process.env
 const cors = require('cors')
-
+const auth = {user: CLIENT, pass: SECRET}
 var indexRouter = require('./routes/index');
 
 var app = express();
