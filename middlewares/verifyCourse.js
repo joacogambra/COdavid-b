@@ -1,11 +1,11 @@
 const Courses = require("../models/Courses");
 
 async function verificarCurso(req, res, next) {
-  const courseId = req.body.courseId;
+  const cursoId = req.body.cursoId;
   const amountPaid = req.body.amountPaid;
-
+  console.log("cursoId", cursoId, 'amountPaid', amountPaid);
   try {
-    const course = await Courses.findById(courseId);
+    const course = await Courses.findById(cursoId);
     if (!course) {
       return res.status(404).json({ error: "El curso especificado no existe." });
     }

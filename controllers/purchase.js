@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 async function insertarCompra(userId, courseId, amountPaid) {
+  // if (!userId || !courseId || amountPaid == null) {
+  //   throw new Error("Error al procesar la compra: faltan datos.");
+  // }
+  console.log("userId", userId,courseId,amountPaid);
   try {
     const comprasCollection = mongoose.connection.collection("purchases");
 

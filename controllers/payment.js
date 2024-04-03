@@ -1,13 +1,38 @@
-const { CLIENT, SECRET, PAYPAL_URL, BACK_URL } = process.env;
+const { CLIENT, SECRET, PAYPAL_URL, BACK_URL, KEY_JWT, FRONTEND_URL } = process.env;
 const axios = require("axios");
+
+
 const createOrder = async (req, res) => {
+  const producto = req.body;
+
+
+
   const order = {
     intent: "CAPTURE",
     purchase_units: [
       {
+        reference_id: producto.id,
         amount: {
-          currency_code: "USD",
-          value: "100.00",
+          currency_code: producto.currency,
+          value: producto.value,
+          breakdown: {
+            item_total: {
+              currency_code: producto.currency,
+              value: producto.value,
+            },
+            items: [
+              {
+                name: producto.name,
+                category: "DIGITAL_GOODS ",
+
+                quantity: "1",
+                unit_amount: {
+                  currency_code: producto.currency,
+                  value: producto.value,
+                },
+              },
+            ],
+          },
         },
       },
     ],
@@ -16,7 +41,8 @@ const createOrder = async (req, res) => {
       landing_page: "BILLING",
       user_action: "PAY_NOW",
 
-      return_url: `${BACK_URL}/payment/capture-order`,
+      // return_url: `${BACK_URL}/payment/capture-order`,
+      return_url: `${FRONTEND_URL}/cursos`,
       cancel_url: `${BACK_URL}/payment/cancel-order`,
     },
   };
@@ -38,8 +64,10 @@ const createOrder = async (req, res) => {
   });
   return res.json(response.data);
 };
+
 const captureOrder = async (req, res) => {
-  const { token } = req.query;
+  const { token } = req.body;
+
   const response = await axios.post(
     `${PAYPAL_URL}/v2/checkout/orders/${token}/capture`,
     null,
@@ -53,12 +81,11 @@ const captureOrder = async (req, res) => {
       },
     },
   );
-  console.log("token", token);
-  console.log("response", response.data);
+
   return res.json(response.data);
 };
 
-const cancelPayment = (req, res) => res.redirect('/');
+const cancelPayment = (req, res) => res.redirect("/");
 
 module.exports = {
   createOrder,

@@ -10,6 +10,12 @@ const schema = new mongoose.Schema({
   codigo: { type: String, required: true },
   verified: { type: Boolean, required: true },
   logged: { type: Boolean, required: true },
+  courses: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "courses",
+    },
+  ],
 });
 
 const User = mongoose.model('users', schema)
