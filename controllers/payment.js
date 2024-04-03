@@ -1,11 +1,8 @@
 const { CLIENT, SECRET, PAYPAL_URL, BACK_URL, KEY_JWT, FRONTEND_URL } = process.env;
 const axios = require("axios");
 
-
 const createOrder = async (req, res) => {
   const producto = req.body;
-
-
 
   const order = {
     intent: "CAPTURE",
@@ -68,21 +65,37 @@ const createOrder = async (req, res) => {
 const captureOrder = async (req, res) => {
   const { token } = req.body;
 
-  const response = await axios.post(
-    `${PAYPAL_URL}/v2/checkout/orders/${token}/capture`,
-    null,
-    {
-      auth: {
-        username: CLIENT,
-        password: SECRET,
+  try {
+    const response = await axios.post(
+      `${PAYPAL_URL}/v2/checkout/orders/${token}/capture`,
+      null,
+      {
+        auth: {
+          username: CLIENT,
+          password: SECRET,
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
       },
-      headers: {
-        "Content-Type": "application/json",
-      },
-    },
-  );
+    );
 
-  return res.json(response.data);
+    return res.json(response.data);
+  } catch (error) {
+    console.log("error", error.response.data.details);
+    const errorDetails = error.response.data.details;
+    const orderAlreadyCapturedError = errorDetails.find(
+      (detail) => detail.issue === "ORDER_ALREADY_CAPTURED",
+    );
+
+    if (orderAlreadyCapturedError) {
+      return res.status(400).json({ message: "La orden ya ha sido capturada." });
+    } else {
+      return res
+        .status(500)
+        .json({ message: "Ocurrió un error al capturar la orden." });
+    }
+  }
 };
 
 const cancelPayment = (req, res) => res.redirect("/");

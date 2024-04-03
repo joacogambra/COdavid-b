@@ -31,6 +31,17 @@ router.post(
   },
 );
 
-router.get("/courses", getAllCourses);
+router.get("/courses", passport.authenticate("jwt", { session: false }), getAllCourses);
 
 module.exports = router;
+
+// router.get(
+//   "/courses",
+//   passport.authenticate("jwt", { session: false, failWithError: true }),
+//   getAllCourses,
+//   (err, req, res, next) => {
+//     if (err) {
+//       getAllCourses(req, res);
+//     }
+//   },
+// );

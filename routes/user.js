@@ -18,7 +18,11 @@ let { signinSchema } = require("../joi/schemaSignin");
 const { accountHasBeenVerified } = require("../middlewares/accountHasBeenVerified");
 const passport = require("../config/passport");
 
-router.post("/signup", validator(schema), accountExists, registrar);
+router.post("/signup", 
+validator(schema),
+ accountExists, 
+ registrar);
+ 
 router.post(
   "/signin",
   validator(signinSchema),
