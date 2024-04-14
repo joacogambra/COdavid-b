@@ -1,5 +1,15 @@
-const { CLIENT, SECRET, PAYPAL_URL, BACK_URL, KEY_JWT, FRONTEND_URL } = process.env;
+const {
+  CLIENT,
+  SECRET,
+  PAYPAL_URL,
+  BACK_URL,
+  STRIPE_SECRET_KEY,
+  FRONTEND_URL,
+  STRIPE_SECRET_KEY_HOOK,
+} = process.env;
 const axios = require("axios");
+const stripe = require("stripe")(STRIPE_SECRET_KEY);
+const stripeHook = require("stripe")(STRIPE_SECRET_KEY_HOOK);
 
 const createOrder = async (req, res) => {
   const producto = req.body;
@@ -97,6 +107,58 @@ const captureOrder = async (req, res) => {
     }
   }
 };
+const createSession = async (req, res) => {
+  const producto = req.body;
+  console.log(producto);
+  const session = await stripe.checkout.sessions.create({
+    line_items: [
+      {
+        price_data: {
+          product_data: {
+            name: producto.name,
+          },
+          currency: "usd",
+          unit_amount: producto.value,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: `${FRONTEND_URL}/success`,
+    cancel_url: `${FRONTEND_URL}/cancel`,
+  });
+
+  return res.json(session);
+};
+
+const webhookController = async (request, response) => {
+  const sig = request.headers["stripe-signature"];
+
+  let event;
+  console.log('webHookController')
+  try {
+    event = stripeHook.webhooks.constructEvent(request.body, sig, endpointSecret);
+
+  } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case "checkout.session.completed":
+      const checkoutSessionCompleted = event.data.object;
+      // Then define and call a function to handle the event checkout.session.completed
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
+};
+
 
 const cancelPayment = (req, res) => res.redirect("/");
 
@@ -104,4 +166,6 @@ module.exports = {
   createOrder,
   captureOrder,
   cancelPayment,
+  createSession,
+  webhookController,
 };
