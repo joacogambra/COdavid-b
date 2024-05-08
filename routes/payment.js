@@ -6,15 +6,22 @@ const {
   createSession,
   webhookController,
 } = require("../controllers/payment");
+const { mustSignIn } = require("../middlewares/mustSignIn");
+const passport = require("../config/passport");
+
 
 router.post("/create-order", createOrder);
 
-router.post("/create-checkout-session", createSession);
+router.post(
+  "/create-checkout-session",
+  passport.authenticate("jwt", { session: false }),
+  createSession,
+);
 
 router.post("/capture-order", captureOrder);
 
 router.get("/cancel-order", cancelPayment);
 
-router.post('/webhook',webhookController)
+
 
 module.exports = router;

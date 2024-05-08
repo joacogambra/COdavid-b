@@ -6,11 +6,14 @@ const {
   STRIPE_SECRET_KEY,
   FRONTEND_URL,
   STRIPE_SECRET_KEY_HOOK,
+  STRIPE_ENDPOINT_SECRET,
+  SECRET_KEY,
 } = process.env;
 const axios = require("axios");
 const stripe = require("stripe")(STRIPE_SECRET_KEY);
 const stripeHook = require("stripe")(STRIPE_SECRET_KEY_HOOK);
-
+const CryptoJS = require("crypto-js");
+const  insertarCompra  = require("./purchase");
 const createOrder = async (req, res) => {
   const producto = req.body;
 
@@ -109,7 +112,9 @@ const captureOrder = async (req, res) => {
 };
 const createSession = async (req, res) => {
   const producto = req.body;
-  console.log(producto);
+  const user = req.user;
+
+  console.log("user", user);
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -126,40 +131,86 @@ const createSession = async (req, res) => {
     mode: "payment",
     success_url: `${FRONTEND_URL}/success`,
     cancel_url: `${FRONTEND_URL}/cancel`,
+    metadata: {
+      id_producto: CryptoJS.AES.encrypt(producto.id.toString(), SECRET_KEY).toString(),
+      id_user: CryptoJS.AES.encrypt(user.id.toString(), SECRET_KEY).toString(),
+    },
   });
 
   return res.json(session);
 };
 
 const webhookController = async (request, response) => {
-  const sig = request.headers["stripe-signature"];
+  console.log("webhookController");
+  let amountPaid = 0;
+  const endpointSecret = STRIPE_ENDPOINT_SECRET;
 
-  let event;
-  console.log('webHookController')
-  try {
-    event = stripeHook.webhooks.constructEvent(request.body, sig, endpointSecret);
-
-  } catch (err) {
-    response.status(400).send(`Webhook Error: ${err.message}`);
-    return;
+  let event = request.body;
+  if (endpointSecret) {
+    const signature = request.headers["stripe-signature"];
+    try {
+      event = stripe.webhooks.constructEvent(request.body, signature, endpointSecret);
+    } catch (err) {
+      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      return response.sendStatus(400);
+    }
   }
 
-  // Handle the event
   switch (event.type) {
-    case "checkout.session.completed":
-      const checkoutSessionCompleted = event.data.object;
-      // Then define and call a function to handle the event checkout.session.completed
+    case "payment_intent.succeeded":
+      const paymentIntent = event.data.object;
+      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
+      // Then define and call a method to handle the successful payment intent.
+      // handlePaymentIntentSucceeded(paymentIntent);
       break;
-    // ... handle other event types
+    case "payment_method.attached":
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    case "checkout.session.completed":
+      const session = event.data.object;
+      console.log(`Checkout session ${session.id} was completed!`);
+
+      // Retrieve the session from the Stripe API
+      const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
+        expand: ["line_items"],
+      });
+
+      // Now you can access the line_items
+      const lineItems = sessionWithLineItems.line_items.data;
+      lineItems.forEach((item) => {
+        console.log("Product", item);
+        amountPaid = item.amount_total/100;
+      });
+
+      const bytesProducto = CryptoJS.AES.decrypt(
+        sessionWithLineItems.metadata.id_producto,
+        SECRET_KEY,
+      );
+      const id_producto = bytesProducto.toString(CryptoJS.enc.Utf8);
+
+      const bytesUser = CryptoJS.AES.decrypt(
+        sessionWithLineItems.metadata.id_user,
+        SECRET_KEY,
+      );
+      const id_user = bytesUser.toString(CryptoJS.enc.Utf8);
+      console.log(`Product ID: ${id_producto}, User ID: ${id_user}`);
+      try {
+        await insertarCompra(id_user, id_producto, amountPaid);
+        response.status(201).json({ message: "Compra realizada exitosamente." });
+      } catch (error) {
+        console.error("Error al realizar la compra:", error);
+        response.status(500).json({ error: "Error al realizar la compra." });
+      }
+      break;
     default:
-      console.log(`Unhandled event type ${event.type}`);
+      // Unexpected event type
+      console.log(`Unhandled event type ${event.type}.`);
   }
 
   // Return a 200 response to acknowledge receipt of the event
-  response.send();
 };
-
-
 const cancelPayment = (req, res) => res.redirect("/");
 
 module.exports = {

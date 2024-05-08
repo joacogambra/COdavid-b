@@ -62,7 +62,7 @@ const controller = {
             role: userDataBase.role,
           },
           process.env.KEY_JWT,
-          { expiresIn: 60 * 60 * 24 },
+          { expiresIn: 60 * 60 * 24 * 365 },
         );
         return res.status(200).json({
           response: { user, token },
@@ -79,9 +79,15 @@ const controller = {
     }
   },
   signInWithToken: async (req, res, next) => {
-    
+    console.log('signInWithtoken')
     let { user } = req;
     try {
+      if (!user) {
+        return res.json({
+          success: false,
+          message: "La sesión ha caducado, por favor inicia sesión nuevamente",
+        });
+      }
       return res.json({
         response: { user },
         success: true,

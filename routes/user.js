@@ -30,7 +30,9 @@ router.post(
   accountHasBeenVerified,
   signIn,
 );
-router.post("/signout", passport.authenticate("jwt", { session: false }), exit);
+router.post("/signout", 
+passport.authenticate("jwt", { session: false }),
+ exit);
 router.post(
   "/token",
   passport.authenticate("jwt", { session: false }),
