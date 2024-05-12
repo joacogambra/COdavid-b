@@ -1,4 +1,5 @@
 // controllers/courseController.js
+const { get } = require("mongoose");
 const Course = require("../models/Courses");
 const Purchase = require("../models/Purchase");	
 // const controller = {
@@ -17,6 +18,7 @@ const controller = {
   getAllCourses: async (req, res) => {
     try {
       const allCourses = await Course.find();
+      console.log('reqsuer',req.user)
       if (req.user) {
         const purchases = await Purchase.find({ user_id: req.user.id });
         const purchasedCourseIds = purchases.map((purchase) =>
@@ -40,6 +42,20 @@ const controller = {
       return res
         .status(500)
         .json({ message: "Ocurrió un error al obtener los cursos." });
+    }
+  },
+  getCourseById: async (req, res) => {
+    try {
+       const { courseId } = req.body;
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Curso no encontrado." });
+      }
+      return res.json(course);
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Ocurrió un error al obtener el curso." });
     }
   },
 };

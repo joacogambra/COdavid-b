@@ -8,7 +8,7 @@ const { validarUserId } = require("../middlewares/isUserId");
 const verifyCourse = require("../middlewares/verifyCourse");
 const mustSignIn = require("../middlewares/mustSignIn");
 const accountExistsSignIn = require("../middlewares/accountExistsSignIn");
-const { getAllCourses } = require("../controllers/courses");
+const { getAllCourses , getCourseById} = require("../controllers/courses");
 const passport = require("../config/passport");
 
 router.post(
@@ -31,7 +31,19 @@ router.post(
   },
 );
 
-router.get("/courses", getAllCourses);
+router.get(
+  "/courses",
+  passport.authenticate("jwt", { session: false }),
+  mustSignIn,
+  getAllCourses,
+);
+
+router.post(
+  "/courses",
+  passport.authenticate("jwt", { session: false }),
+  mustSignIn,
+  getCourseById,
+);
 
 module.exports = router;
 
