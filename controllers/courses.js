@@ -4,7 +4,6 @@ const Course = require("../models/Courses");
 const Purchase = require("../models/Purchase");	
 // const controller = {
 //   getAllCourses: async (req, res) => {
-//     console.log("getAllCourses");
 //     try {
 //       const courses = await Course.find();
 //       res.json(courses);
@@ -18,7 +17,6 @@ const controller = {
   getAllCourses: async (req, res) => {
     try {
       const allCourses = await Course.find();
-      console.log('reqsuer',req.user)
       if (req.user) {
         const purchases = await Purchase.find({ user_id: req.user.id });
         const purchasedCourseIds = purchases.map((purchase) =>

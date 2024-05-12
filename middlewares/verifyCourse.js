@@ -3,7 +3,6 @@ const Courses = require("../models/Courses");
 async function verificarCurso(req, res, next) {
   const cursoId = req.body.cursoId;
   const amountPaid = req.body.amountPaid;
-  console.log("cursoId", cursoId, 'amountPaid', amountPaid);
   try {
     const course = await Courses.findById(cursoId);
     if (!course) {

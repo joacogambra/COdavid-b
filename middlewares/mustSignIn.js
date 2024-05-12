@@ -1,7 +1,6 @@
 const { mustSignInResponse } = require("../config/responses");
 
 function mustSignIn(req, res, next) {
-  console.log('req',req.user)
   if (!req.user) {
     return res.status(401).json({ error: "Usuario no autenticado." });
   }

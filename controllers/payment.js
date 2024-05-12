@@ -95,7 +95,6 @@ const captureOrder = async (req, res) => {
 
     return res.json(response.data);
   } catch (error) {
-    console.log("error", error.response.data.details);
     const errorDetails = error.response.data.details;
     const orderAlreadyCapturedError = errorDetails.find(
       (detail) => detail.issue === "ORDER_ALREADY_CAPTURED",
@@ -114,7 +113,6 @@ const createSession = async (req, res) => {
   const producto = req.body;
   const user = req.user;
 
-  console.log("user", user);
   const session = await stripe.checkout.sessions.create({
     line_items: [
       {
@@ -141,7 +139,6 @@ const createSession = async (req, res) => {
 };
 
 const webhookController = async (request, response) => {
-  console.log("webhookController");
   let amountPaid = 0;
   const endpointSecret = STRIPE_ENDPOINT_SECRET;
 
@@ -151,7 +148,6 @@ const webhookController = async (request, response) => {
     try {
       event = stripe.webhooks.constructEvent(request.body, signature, endpointSecret);
     } catch (err) {
-      console.log(`⚠️  Webhook signature verification failed.`, err.message);
       return response.sendStatus(400);
     }
   }
@@ -159,7 +155,6 @@ const webhookController = async (request, response) => {
   switch (event.type) {
     case "payment_intent.succeeded":
       const paymentIntent = event.data.object;
-      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
       // Then define and call a method to handle the successful payment intent.
       // handlePaymentIntentSucceeded(paymentIntent);
       break;
@@ -170,7 +165,6 @@ const webhookController = async (request, response) => {
       break;
     case "checkout.session.completed":
       const session = event.data.object;
-      console.log(`Checkout session ${session.id} was completed!`);
 
       // Retrieve the session from the Stripe API
       const sessionWithLineItems = await stripe.checkout.sessions.retrieve(session.id, {
@@ -180,7 +174,6 @@ const webhookController = async (request, response) => {
       // Now you can access the line_items
       const lineItems = sessionWithLineItems.line_items.data;
       lineItems.forEach((item) => {
-        console.log("Product", item);
         amountPaid = item.amount_total/100;
       });
 
@@ -195,7 +188,6 @@ const webhookController = async (request, response) => {
         SECRET_KEY,
       );
       const id_user = bytesUser.toString(CryptoJS.enc.Utf8);
-      console.log(`Product ID: ${id_producto}, User ID: ${id_user}`);
       try {
         await insertarCompra(id_user, id_producto, amountPaid);
         response.status(201).json({ message: "Compra realizada exitosamente." });

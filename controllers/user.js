@@ -13,7 +13,6 @@ const jwt = require("jsonwebtoken");
 const controller = {
   registrar: async (req, res, next) => {
     let { mail, name, age, country, contraseña } = req.body;
-    console.log(req.body)
     let verified = false;
     let codigo = crypto.randomBytes(16).toString("hex");
     contraseña = bcryptjs.hashSync(contraseña, 10);
@@ -22,7 +21,6 @@ const controller = {
       await accountVerificationEmail(mail, codigo);
       return userSignedUpResponse(req, res);
     } catch (error) {
-      console.log(error);
       next(error);
     }
   },
@@ -79,7 +77,6 @@ const controller = {
     }
   },
   signInWithToken: async (req, res, next) => {
-    console.log('signInWithtoken')
     let { user } = req;
     try {
       if (!user) {

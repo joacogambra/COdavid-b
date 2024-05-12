@@ -16,7 +16,6 @@ router.post(
   passport.authenticate("jwt", { session: false }),  
   mustSignIn,
   async (req, res) => {
-    console.log('req',req.user)
     const userId = req.user.id;
     const { courseId, amountPaid } = req.body;
     
