@@ -44,7 +44,7 @@ const controller = {
         { new: true },
       );
       if (user) {
-        return res.redirect("https://github.com/joacogambra");
+        return res.redirect("https://tradesinlimites.com.ar/login");
       }
       return userNotFoundResponse(req, res);
     } catch (error) {
