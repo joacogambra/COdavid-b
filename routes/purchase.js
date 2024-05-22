@@ -32,8 +32,8 @@ router.post(
 
 router.get(
   "/courses",
-  // passport.authenticate("jwt", { session: false }),
-  // mustSignIn,
+  passport.authenticate("jwt", { session: false }),
+ mustSignIn,
   getAllCourses,
 );
 
